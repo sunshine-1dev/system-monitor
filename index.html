@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>System Monitor</title>
+<style>
+:root {
+  --bg-primary: #0d1117;
+  --bg-card: #161b22;
+  --bg-card-hover: #1c2333;
+  --border: #30363d;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-muted: #6e7681;
+  --green: #3fb950;
+  --green-dim: rgba(63,185,80,0.15);
+  --yellow: #d29922;
+  --yellow-dim: rgba(210,153,34,0.15);
+  --red: #f85149;
+  --red-dim: rgba(248,81,73,0.15);
+  --blue: #58a6ff;
+  --blue-dim: rgba(88,166,255,0.15);
+  --purple: #bc8cff;
+  --cyan: #39d2c0;
+  --gradient-green: linear-gradient(135deg, #3fb950, #2ea043);
+  --gradient-blue: linear-gradient(135deg, #58a6ff, #1f6feb);
+  --gradient-purple: linear-gradient(135deg, #bc8cff, #8957e5);
+  --gradient-cyan: linear-gradient(135deg, #39d2c0, #1b9e8a);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', Helvetica, Arial, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Header */
+.header {
+  background: linear-gradient(180deg, rgba(22,27,34,0.95), rgba(13,17,23,0.98));
+  border-bottom: 1px solid var(--border);
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  backdrop-filter: blur(12px);
+}
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo {
+  width: 36px; height: 36px;
+  background: var(--gradient-cyan);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  box-shadow: 0 0 20px rgba(57,210,192,0.3);
+}
+.header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.status-online {
+  background: var(--green-dim);
+  color: var(--green);
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(63,185,80,0.4); }
+  50% { opacity: 0.7; box-shadow: 0 0 0 6px rgba(63,185,80,0); }
+}
+.header-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.header-info span { margin-right: 16px; }
+.header-info .label { color: var(--text-muted); }
+.refresh-timer {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 100px;
+  text-align: right;
+}
+
+/* System Info Bar */
+.sysinfo-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.sysinfo-item {
+  background: var(--bg-card);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sysinfo-icon {
+  font-size: 18px;
+  opacity: 0.8;
+}
+.sysinfo-text .label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.sysinfo-text .value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  word-break: break-all;
+}
+
+/* Main Grid */
+.dashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: 16px;
+  padding: 16px 24px 32px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.card:hover {
+  border-color: rgba(88,166,255,0.3);
+  background: var(--bg-card-hover);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.card-title .icon { font-size: 16px; }
+.card-badge {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-weight: 600;
+}
+.card-body { padding: 20px; }
+
+/* Ring Chart */
+.ring-container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+.ring-wrapper {
+  position: relative;
+  width: 120px; height: 120px;
+  flex-shrink: 0;
+}
+.ring-svg {
+  width: 120px; height: 120px;
+  transform: rotate(-90deg);
+}
+.ring-bg {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 8;
+}
+.ring-fg {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease, stroke 0.5s ease;
+}
+.ring-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+.ring-value {
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+}
+.ring-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+.ring-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(48,54,61,0.5);
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.detail-value {
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Core Bars */
+.core-bars {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+}
+.core-bar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.core-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 45px;
+  font-variant-numeric: tabular-nums;
+}
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 1s ease, background 0.5s ease;
+  min-width: 2px;
+}
+.core-value {
+  font-size: 11px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Disk */
+.disk-list { display: flex; flex-direction: column; gap: 12px; }
+.disk-item {}
+.disk-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.disk-mount {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.disk-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.disk-bar-track {
+  height: 8px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.disk-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease, background 0.5s ease;
+}
+
+/* Network */
+.net-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+.net-item {
+  background: rgba(48,54,61,0.2);
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+}
+.net-icon { font-size: 24px; margin-bottom: 8px; }
+.net-speed {
+  font-size: 24px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.net-unit {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.net-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 8px;
+}
+.net-extra {
+  margin-top: 16px;
+  display: flex;
+  justify-content: space-around;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.net-extra-item { text-align: center; }
+.net-extra-value { font-size: 18px; font-weight: 700; color: var(--blue); }
+.net-extra-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+/* Load */
+.load-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+.load-item {
+  text-align: center;
+  background: rgba(48,54,61,0.2);
+  border-radius: 8px;
+  padding: 16px 12px;
+}
+.load-period {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.load-value {
+  font-size: 28px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.load-bar-track {
+  margin-top: 8px;
+  height: 4px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.load-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 1s ease;
+}
+
+/* Process Table */
+.card-wide { grid-column: 1 / -1; }
+.proc-controls {
+  display: flex;
+  gap: 8px;
+}
+.proc-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.proc-btn:hover { border-color: var(--blue); color: var(--blue); }
+.proc-btn.active {
+  background: var(--blue-dim);
+  border-color: var(--blue);
+  color: var(--blue);
+}
+.proc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.proc-table th {
+  text-align: left;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.proc-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(48,54,61,0.3);
+  font-variant-numeric: tabular-nums;
+}
+.proc-table tr {
+  transition: background 0.2s;
+}
+.proc-table tbody tr:hover {
+  background: rgba(88,166,255,0.05);
+}
+.proc-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+}
+.rank-1 { background: rgba(210,153,34,0.2); color: var(--yellow); }
+.rank-2 { background: rgba(139,148,158,0.15); color: var(--text-secondary); }
+.rank-3 { background: rgba(180,120,80,0.15); color: #d2956a; }
+.proc-name {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.proc-cpu-bar, .proc-mem-bar {
+  width: 60px;
+  height: 4px;
+  background: rgba(48,54,61,0.5);
+  border-radius: 2px;
+  overflow: hidden;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 8px;
+}
+.proc-cpu-bar .fill, .proc-mem-bar .fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* Loading */
+.loading-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.5s;
+}
+.loading-overlay.hidden { opacity: 0; pointer-events: none; }
+.loading-spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--cyan);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+  margin-top: 16px;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+/* Error */
+.error-banner {
+  background: var(--red-dim);
+  color: var(--red);
+  padding: 10px 24px;
+  font-size: 13px;
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.error-banner.show { display: flex; }
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.card { animation: fadeIn 0.5s ease both; }
+.card:nth-child(1) { animation-delay: 0.05s; }
+.card:nth-child(2) { animation-delay: 0.1s; }
+.card:nth-child(3) { animation-delay: 0.15s; }
+.card:nth-child(4) { animation-delay: 0.2s; }
+.card:nth-child(5) { animation-delay: 0.25s; }
+.card:nth-child(6) { animation-delay: 0.3s; }
+
+/* Number Animation */
+.animated-num { transition: all 0.5s ease; }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+    padding: 12px;
+    gap: 12px;
+  }
+  .header { padding: 12px 16px; }
+  .ring-container { flex-direction: column; align-items: center; }
+  .ring-details { width: 100%; }
+  .net-grid { grid-template-columns: 1fr 1fr; }
+  .load-grid { grid-template-columns: repeat(3, 1fr); }
+  .proc-table { font-size: 11px; }
+  .proc-table th, .proc-table td { padding: 6px 8px; }
+  .sysinfo-bar { grid-template-columns: repeat(2, 1fr); }
+  .card-wide { grid-column: 1; }
+}
+@media (max-width: 480px) {
+  .header h1 { font-size: 15px; }
+  .sysinfo-bar { grid-template-columns: 1fr; }
+  .core-bars { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading">
+  <div class="loading-spinner"></div>
+  <div class="loading-text">正在加载系统数据...</div>
+</div>
+
+<div class="error-banner" id="error">
+  <span>⚠️</span>
+  <span id="error-msg">数据加载失败</span>
+</div>
+
+<header class="header">
+  <div class="header-left">
+    <div class="logo">📡</div>
+    <h1>System Monitor</h1>
+    <div class="status-badge status-online">
+      <div class="status-dot"></div>
+      <span>LIVE</span>
+    </div>
+  </div>
+  <div class="header-right">
+    <div class="header-info">
+      <span><span class="label">HOST </span><span id="h-hostname">-</span></span>
+      <span><span class="label">IP </span><span id="h-ip">-</span></span>
+    </div>
+    <div class="refresh-timer" id="refresh-timer">刷新中...</div>
+  </div>
+</header>
+
+<div class="sysinfo-bar">
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">🖥️</span>
+    <div class="sysinfo-text">
+      <div class="label">操作系统</div>
+      <div class="value" id="si-os">-</div>
+    </div>
+  </div>
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">⚙️</span>
+    <div class="sysinfo-text">
+      <div class="label">内核</div>
+      <div class="value" id="si-kernel">-</div>
+    </div>
+  </div>
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">⏱️</span>
+    <div class="sysinfo-text">
+      <div class="label">运行时间</div>
+      <div class="value" id="si-uptime">-</div>
+    </div>
+  </div>
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">🔄</span>
+    <div class="sysinfo-text">
+      <div class="label">进程数</div>
+      <div class="value" id="si-procs">-</div>
+    </div>
+  </div>
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">📡</span>
+    <div class="sysinfo-text">
+      <div class="label">网络连接</div>
+      <div class="value" id="si-conns">-</div>
+    </div>
+  </div>
+  <div class="sysinfo-item">
+    <span class="sysinfo-icon">🕐</span>
+    <div class="sysinfo-text">
+      <div class="label">最后更新</div>
+      <div class="value" id="si-updated">-</div>
+    </div>
+  </div>
+</div>
+
+<div class="dashboard">
+  <!-- CPU Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🖥️</span> CPU 使用率</div>
+      <div class="card-badge" id="cpu-badge" style="background:var(--green-dim);color:var(--green)">0%</div>
+    </div>
+    <div class="card-body">
+      <div class="ring-container">
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-fg" id="cpu-ring" cx="60" cy="60" r="52"
+              stroke="var(--green)" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
+          </svg>
+          <div class="ring-text">
+            <div class="ring-value" id="cpu-pct">0</div>
+            <div class="ring-label">%</div>
+          </div>
+        </div>
+        <div class="ring-details" id="cpu-details"></div>
+      </div>
+      <div class="core-bars" id="cpu-cores"></div>
+    </div>
+  </div>
+
+  <!-- Memory Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">💾</span> 内存使用</div>
+      <div class="card-badge" id="mem-badge" style="background:var(--green-dim);color:var(--green)">0%</div>
+    </div>
+    <div class="card-body">
+      <div class="ring-container">
+        <div class="ring-wrapper">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"></circle>
+            <circle class="ring-fg" id="mem-ring" cx="60" cy="60" r="52"
+              stroke="var(--blue)" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
+          </svg>
+          <div class="ring-text">
+            <div class="ring-value" id="mem-pct">0</div>
+            <div class="ring-label">%</div>
+          </div>
+        </div>
+        <div class="ring-details" id="mem-details"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Disk Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">💿</span> 磁盘使用</div>
+    </div>
+    <div class="card-body">
+      <div class="disk-list" id="disk-list"></div>
+    </div>
+  </div>
+
+  <!-- Network Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🌐</span> 网络流量</div>
+    </div>
+    <div class="card-body">
+      <div class="net-grid">
+        <div class="net-item">
+          <div class="net-icon">⬆️</div>
+          <div class="net-speed" id="net-up" style="color:var(--green)">0</div>
+          <div class="net-unit" id="net-up-unit">KB/s</div>
+          <div class="net-label">上传速度</div>
+        </div>
+        <div class="net-item">
+          <div class="net-icon">⬇️</div>
+          <div class="net-speed" id="net-down" style="color:var(--blue)">0</div>
+          <div class="net-unit" id="net-down-unit">KB/s</div>
+          <div class="net-label">下载速度</div>
+        </div>
+      </div>
+      <div class="net-extra">
+        <div class="net-extra-item">
+          <div class="net-extra-value" id="net-total-up">0</div>
+          <div class="net-extra-label">总上传</div>
+        </div>
+        <div class="net-extra-item">
+          <div class="net-extra-value" id="net-total-down">0</div>
+          <div class="net-extra-label">总下载</div>
+        </div>
+        <div class="net-extra-item">
+          <div class="net-extra-value" id="net-conns">0</div>
+          <div class="net-extra-label">连接数</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">🌡️</span> 系统负载</div>
+    </div>
+    <div class="card-body">
+      <div class="load-grid">
+        <div class="load-item">
+          <div class="load-period">1 分钟</div>
+          <div class="load-value" id="load-1">0.00</div>
+          <div class="load-bar-track"><div class="load-bar-fill" id="load-1-bar" style="width:0;background:var(--green)"></div></div>
+        </div>
+        <div class="load-item">
+          <div class="load-period">5 分钟</div>
+          <div class="load-value" id="load-5">0.00</div>
+          <div class="load-bar-track"><div class="load-bar-fill" id="load-5-bar" style="width:0;background:var(--green)"></div></div>
+        </div>
+        <div class="load-item">
+          <div class="load-period">15 分钟</div>
+          <div class="load-value" id="load-15">0.00</div>
+          <div class="load-bar-track"><div class="load-bar-fill" id="load-15-bar" style="width:0;background:var(--green)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Process Card -->
+  <div class="card card-wide">
+    <div class="card-header">
+      <div class="card-title"><span class="icon">📊</span> Top 10 进程</div>
+      <div class="proc-controls">
+        <button class="proc-btn active" id="sort-cpu" onclick="sortProc('cpu')">按 CPU</button>
+        <button class="proc-btn" id="sort-mem" onclick="sortProc('mem')">按内存</button>
+      </div>
+    </div>
+    <div class="card-body" style="padding:0;overflow-x:auto;">
+      <table class="proc-table">
+        <thead>
+          <tr>
+            <th style="width:40px">#</th>
+            <th>PID</th>
+            <th>用户</th>
+            <th>进程名</th>
+            <th>CPU%</th>
+            <th>内存%</th>
+            <th>内存</th>
+          </tr>
+        </thead>
+        <tbody id="proc-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const CIRC = 2 * Math.PI * 52; // 326.73
+let currentSort = 'cpu';
+let sysData = null;
+let countdown = 30;
+let countdownTimer = null;
+
+function getColor(pct) {
+  if (pct < 60) return 'var(--green)';
+  if (pct < 85) return 'var(--yellow)';
+  return 'var(--red)';
+}
+function getColorDim(pct) {
+  if (pct < 60) return 'var(--green-dim)';
+  if (pct < 85) return 'var(--yellow-dim)';
+  return 'var(--red-dim)';
+}
+function formatBytes(bytes) {
+  if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+  if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+  if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return bytes + ' B';
+}
+function formatSpeed(bytesPerSec) {
+  if (bytesPerSec >= 1048576) return { val: (bytesPerSec / 1048576).toFixed(1), unit: 'MB/s' };
+  if (bytesPerSec >= 1024) return { val: (bytesPerSec / 1024).toFixed(1), unit: 'KB/s' };
+  return { val: bytesPerSec.toFixed(0), unit: 'B/s' };
+}
+
+function setRing(id, pct) {
+  const el = document.getElementById(id);
+  const offset = CIRC - (CIRC * Math.min(pct, 100) / 100);
+  el.style.strokeDashoffset = offset;
+  el.style.stroke = getColor(pct);
+}
+
+function animateNumber(el, target, decimals) {
+  decimals = decimals || 0;
+  const start = parseFloat(el.textContent) || 0;
+  const diff = target - start;
+  const steps = 20;
+  let step = 0;
+  function tick() {
+    step++;
+    const val = start + diff * (step / steps);
+    el.textContent = val.toFixed(decimals);
+    if (step < steps) requestAnimationFrame(tick);
+    else el.textContent = target.toFixed(decimals);
+  }
+  requestAnimationFrame(tick);
+}
+
+function updateDashboard(d) {
+  sysData = d;
+  // Header
+  document.getElementById('h-hostname').textContent = d.system.hostname || '-';
+  document.getElementById('h-ip').textContent = d.system.ip || '-';
+
+  // System info bar
+  document.getElementById('si-os').textContent = d.system.os || '-';
+  document.getElementById('si-kernel').textContent = d.system.kernel || '-';
+  document.getElementById('si-uptime').textContent = d.system.uptime || '-';
+  document.getElementById('si-procs').textContent = d.process_count || '-';
+  document.getElementById('si-conns').textContent = d.network_connections || '-';
+  const ts = d.timestamp ? new Date(d.timestamp * 1000) : null;
+  document.getElementById('si-updated').textContent = ts
+    ? ts.toLocaleString('zh-CN', { hour12: false })
+    : '-';
+
+  // CPU
+  const cpuPct = d.cpu.total;
+  setRing('cpu-ring', cpuPct);
+  animateNumber(document.getElementById('cpu-pct'), cpuPct, 1);
+  const cpuBadge = document.getElementById('cpu-badge');
+  cpuBadge.textContent = cpuPct.toFixed(1) + '%';
+  cpuBadge.style.background = getColorDim(cpuPct);
+  cpuBadge.style.color = getColor(cpuPct);
+
+  // CPU details
+  const cpuDet = document.getElementById('cpu-details');
+  cpuDet.innerHTML = `
+    <div class="detail-row"><span class="detail-label">总使用率</span><span class="detail-value" style="color:${getColor(cpuPct)}">${cpuPct.toFixed(1)}%</span></div>
+    <div class="detail-row"><span class="detail-label">核心数</span><span class="detail-value">${d.cpu.cores ? d.cpu.cores.length : '-'}</span></div>
+    <div class="detail-row"><span class="detail-label">用户态</span><span class="detail-value">${(d.cpu.user||0).toFixed(1)}%</span></div>
+    <div class="detail-row"><span class="detail-label">系统态</span><span class="detail-value">${(d.cpu.system||0).toFixed(1)}%</span></div>
+    <div class="detail-row"><span class="detail-label">IO等待</span><span class="detail-value">${(d.cpu.iowait||0).toFixed(1)}%</span></div>
+  `;
+
+  // Core bars
+  const coresEl = document.getElementById('cpu-cores');
+  if (d.cpu.cores && d.cpu.cores.length > 0) {
+    coresEl.innerHTML = d.cpu.cores.map((c, i) => `
+      <div class="core-bar-item">
+        <span class="core-label">Core ${i}</span>
+        <div class="bar-track"><div class="bar-fill" style="width:${c}%;background:${getColor(c)}"></div></div>
+        <span class="core-value" style="color:${getColor(c)}">${c.toFixed(0)}%</span>
+      </div>
+    `).join('');
+  }
+
+  // Memory
+  const memPct = d.memory.percent;
+  setRing('mem-ring', memPct);
+  animateNumber(document.getElementById('mem-pct'), memPct, 1);
+  const memBadge = document.getElementById('mem-badge');
+  memBadge.textContent = memPct.toFixed(1) + '%';
+  memBadge.style.background = getColorDim(memPct);
+  memBadge.style.color = getColor(memPct);
+
+  const memDet = document.getElementById('mem-details');
+  memDet.innerHTML = `
+    <div class="detail-row"><span class="detail-label">总内存</span><span class="detail-value">${formatBytes(d.memory.total)}</span></div>
+    <div class="detail-row"><span class="detail-label">已使用</span><span class="detail-value" style="color:${getColor(memPct)}">${formatBytes(d.memory.used)}</span></div>
+    <div class="detail-row"><span class="detail-label">可用</span><span class="detail-value" style="color:var(--green)">${formatBytes(d.memory.available)}</span></div>
+    <div class="detail-row"><span class="detail-label">缓存</span><span class="detail-value">${formatBytes(d.memory.cached||0)}</span></div>
+    <div class="detail-row"><span class="detail-label">Buffers</span><span class="detail-value">${formatBytes(d.memory.buffers||0)}</span></div>
+  `;
+
+  // Disk
+  const diskEl = document.getElementById('disk-list');
+  if (d.disks && d.disks.length > 0) {
+    diskEl.innerHTML = d.disks.map(dk => {
+      const pct = dk.percent || 0;
+      return `
+        <div class="disk-item">
+          <div class="disk-header">
+            <span class="disk-mount">${dk.mount} <span style="color:var(--text-muted);font-weight:400;font-size:11px">(${dk.device})</span></span>
+            <span class="disk-info">${dk.used} / ${dk.total} (${pct}%)</span>
+          </div>
+          <div class="disk-bar-track"><div class="disk-bar-fill" style="width:${pct}%;background:${getColor(pct)}"></div></div>
+        </div>`;
+    }).join('');
+  }
+
+  // Network
+  const up = d.network.upload_speed || 0;
+  const down = d.network.download_speed || 0;
+  const upF = formatSpeed(up);
+  const downF = formatSpeed(down);
+  document.getElementById('net-up').textContent = upF.val;
+  document.getElementById('net-up-unit').textContent = upF.unit;
+  document.getElementById('net-down').textContent = downF.val;
+  document.getElementById('net-down-unit').textContent = downF.unit;
+  document.getElementById('net-total-up').textContent = formatBytes(d.network.total_sent || 0);
+  document.getElementById('net-total-down').textContent = formatBytes(d.network.total_recv || 0);
+  document.getElementById('net-conns').textContent = d.network_connections || 0;
+
+  // Load
+  const cores = d.cpu.cores ? d.cpu.cores.length : 1;
+  ['1','5','15'].forEach(p => {
+    const val = d.load_average['min' + p] || d.load_average[p + 'min'] || 0;
+    const pct = Math.min((val / cores) * 100, 100);
+    document.getElementById('load-' + p).textContent = val.toFixed(2);
+    const bar = document.getElementById('load-' + p + '-bar');
+    bar.style.width = pct + '%';
+    bar.style.background = getColor(pct);
+    document.getElementById('load-' + p).style.color = getColor(pct);
+  });
+
+  // Processes
+  renderProcesses();
+}
+
+function renderProcesses() {
+  if (!sysData) return;
+  const key = currentSort === 'cpu' ? 'top_cpu' : 'top_memory';
+  const procs = sysData.processes[key] || [];
+  const tbody = document.getElementById('proc-tbody');
+  tbody.innerHTML = procs.map((p, i) => {
+    const cpuPct = p.cpu || 0;
+    const memPct = p.mem || 0;
+    let rankClass = '';
+    if (i === 0) rankClass = 'rank-1';
+    else if (i === 1) rankClass = 'rank-2';
+    else if (i === 2) rankClass = 'rank-3';
+    return `<tr>
+      <td><span class="proc-rank ${rankClass}">${i + 1}</span></td>
+      <td>${p.pid}</td>
+      <td style="color:var(--text-secondary)">${p.user}</td>
+      <td class="proc-name" title="${p.command || p.name}">${p.command || p.name}</td>
+      <td>${cpuPct.toFixed(1)}%<div class="proc-cpu-bar"><div class="fill" style="width:${Math.min(cpuPct, 100)}%;background:${getColor(cpuPct)}"></div></div></td>
+      <td>${memPct.toFixed(1)}%<div class="proc-mem-bar"><div class="fill" style="width:${Math.min(memPct, 100)}%;background:${getColor(memPct)}"></div></div></td>
+      <td style="color:var(--text-secondary)">${p.rss || '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function sortProc(type) {
+  currentSort = type;
+  document.getElementById('sort-cpu').classList.toggle('active', type === 'cpu');
+  document.getElementById('sort-mem').classList.toggle('active', type === 'mem');
+  renderProcesses();
+}
+
+function startCountdown() {
+  countdown = 30;
+  if (countdownTimer) clearInterval(countdownTimer);
+  countdownTimer = setInterval(() => {
+    countdown--;
+    document.getElementById('refresh-timer').textContent = `${countdown}s 后刷新`;
+    if (countdown <= 0) {
+      clearInterval(countdownTimer);
+      fetchData();
+    }
+  }, 1000);
+}
+
+function fetchData() {
+  const url = 'data.json?t=' + Date.now();
+  fetch(url)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(d => {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('error').classList.remove('show');
+      updateDashboard(d);
+      startCountdown();
+    })
+    .catch(e => {
+      document.getElementById('loading').classList.add('hidden');
+      document.getElementById('error-msg').textContent = '数据加载失败: ' + e.message;
+      document.getElementById('error').classList.add('show');
+      startCountdown();
+    });
+}
+
+// Init
+fetchData();
+</script>
+</body>
+</html>
