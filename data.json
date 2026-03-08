@@ -1,0 +1,237 @@
+{
+  "timestamp": 1772989543.9429643,
+  "system": {
+    "hostname": "VM-0-15-ubuntu",
+    "os": "Ubuntu 24.04.4 LTS",
+    "kernel": "6.8.0-71-generic",
+    "ip": "10.0.0.15",
+    "uptime": "55天 3小时 26分钟",
+    "uptime_seconds": 4764362.25
+  },
+  "cpu": {
+    "total": 1.3,
+    "user": 1.0,
+    "system": 0.3,
+    "idle": 74.4,
+    "iowait": 24.3,
+    "cores": [
+      5.0,
+      1.0,
+      0.0,
+      0.0
+    ]
+  },
+  "memory": {
+    "total": 3904184320,
+    "used": 1596805120,
+    "free": 475983872,
+    "available": 2307379200,
+    "buffers": 60563456,
+    "cached": 1899683840,
+    "percent": 40.9
+  },
+  "disks": [
+    {
+      "device": "/dev/vda2",
+      "mount": "/",
+      "fstype": "ext4",
+      "total": "39.3 GB",
+      "used": "30.9 GB",
+      "available": "6.6 GB",
+      "total_bytes": 42156257280,
+      "used_bytes": 33229893632,
+      "percent": 83
+    },
+    {
+      "device": "chirmyram:",
+      "mount": "/mnt/chirmyram",
+      "fstype": "fuse.rclone",
+      "total": "1.0 PB",
+      "used": "0.0 B",
+      "available": "1.0 PB",
+      "total_bytes": 1125899906842624,
+      "used_bytes": 0,
+      "percent": 0
+    }
+  ],
+  "network": {
+    "upload_speed": 5500,
+    "download_speed": 79211,
+    "total_sent": 11997428453,
+    "total_recv": 109583538714,
+    "interface": "eth0"
+  },
+  "load_average": {
+    "min1": 0.9,
+    "min5": 0.87,
+    "min15": 0.93
+  },
+  "processes": {
+    "top_cpu": [
+      {
+        "user": "ubuntu",
+        "pid": 2302303,
+        "cpu": 1.9,
+        "mem": 16.0,
+        "rss": "595.7 MB",
+        "command": "openclaw-gateway"
+      },
+      {
+        "user": "root",
+        "pid": 2339248,
+        "cpu": 1.5,
+        "mem": 0.8,
+        "rss": "32.5 MB",
+        "command": "/usr/lib/snapd/snapd"
+      },
+      {
+        "user": "ubuntu",
+        "pid": 2366690,
+        "cpu": 1.2,
+        "mem": 0.3,
+        "rss": "14.2 MB",
+        "command": "python3 collect.py"
+      },
+      {
+        "user": "root",
+        "pid": 3156503,
+        "cpu": 0.8,
+        "mem": 0.3,
+        "rss": "13.8 MB",
+        "command": "barad_agent"
+      },
+      {
+        "user": "root",
+        "pid": 819552,
+        "cpu": 0.8,
+        "mem": 2.0,
+        "rss": "76.3 MB",
+        "command": "/usr/local/qcloud/YunJing/YDEyes/YDService"
+      },
+      {
+        "user": "root",
+        "pid": 2364481,
+        "cpu": 0.2,
+        "mem": 0.0,
+        "rss": "0.0 B",
+        "command": "[kworker/0:0-events]"
+      },
+      {
+        "user": "mysql",
+        "pid": 369435,
+        "cpu": 0.2,
+        "mem": 0.4,
+        "rss": "17.6 MB",
+        "command": "/usr/sbin/mysqld"
+      },
+      {
+        "user": "ubuntu",
+        "pid": 653108,
+        "cpu": 0.2,
+        "mem": 1.5,
+        "rss": "59.0 MB",
+        "command": "/usr/bin/rclone mount chirmyram:/ /mnt/chirmyram --config /home/ubuntu/.config/r"
+      },
+      {
+        "user": "root",
+        "pid": 2363453,
+        "cpu": 0.1,
+        "mem": 0.0,
+        "rss": "0.0 B",
+        "command": "[kworker/2:1-events]"
+      },
+      {
+        "user": "root",
+        "pid": 2363788,
+        "cpu": 0.1,
+        "mem": 0.0,
+        "rss": "0.0 B",
+        "command": "[kworker/3:0-mm_percpu_wq]"
+      }
+    ],
+    "top_memory": [
+      {
+        "user": "ubuntu",
+        "pid": 2302303,
+        "cpu": 1.9,
+        "mem": 16.0,
+        "rss": "595.7 MB",
+        "command": "openclaw-gateway"
+      },
+      {
+        "user": "emby",
+        "pid": 398069,
+        "cpu": 0.0,
+        "mem": 4.0,
+        "rss": "149.6 MB",
+        "command": "/opt/emby-server/system/EmbyServer -programdata /var/lib/emby -ffdetect /opt/emb"
+      },
+      {
+        "user": "root",
+        "pid": 819552,
+        "cpu": 0.8,
+        "mem": 2.0,
+        "rss": "76.3 MB",
+        "command": "/usr/local/qcloud/YunJing/YDEyes/YDService"
+      },
+      {
+        "user": "ubuntu",
+        "pid": 653108,
+        "cpu": 0.2,
+        "mem": 1.5,
+        "rss": "59.0 MB",
+        "command": "/usr/bin/rclone mount chirmyram:/ /mnt/chirmyram --config /home/ubuntu/.config/r"
+      },
+      {
+        "user": "root",
+        "pid": 369975,
+        "cpu": 0.0,
+        "mem": 1.0,
+        "rss": "40.8 MB",
+        "command": "/usr/lib/systemd/systemd-journald"
+      },
+      {
+        "user": "root",
+        "pid": 2339248,
+        "cpu": 1.5,
+        "mem": 0.8,
+        "rss": "32.5 MB",
+        "command": "/usr/lib/snapd/snapd"
+      },
+      {
+        "user": "root",
+        "pid": 376098,
+        "cpu": 0.0,
+        "mem": 0.7,
+        "rss": "26.5 MB",
+        "command": "/sbin/multipathd -d -s"
+      },
+      {
+        "user": "root",
+        "pid": 368398,
+        "cpu": 0.0,
+        "mem": 0.6,
+        "rss": "24.2 MB",
+        "command": "/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock"
+      },
+      {
+        "user": "root",
+        "pid": 391512,
+        "cpu": 0.0,
+        "mem": 0.5,
+        "rss": "18.9 MB",
+        "command": "/usr/bin/containerd"
+      },
+      {
+        "user": "mysql",
+        "pid": 369435,
+        "cpu": 0.2,
+        "mem": 0.4,
+        "rss": "17.6 MB",
+        "command": "/usr/sbin/mysqld"
+      }
+    ]
+  },
+  "process_count": 156,
+  "network_connections": 45
+}
